@@ -1,0 +1,125 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerMovement : MonoBehaviour
+{
+    public AudioSource jump;
+    public AudioSource die;
+    public Transform spawner;
+    public int moveSpeed = 10;
+    public int jumpForce = 5;
+    public Rigidbody2D rd;
+    private Vector2 moveDirection;
+    private float velY;
+    private float accY;
+    private bool facingRight;
+    public Animator ani;
+    public LayerMask GroundLayer;
+    public LayerMask DropLayer;
+    public Transform GroundCheck;
+    private float startTime=.25f;
+    private float sTimer;
+    private float dTimer;
+    private bool dta;
+    // Start is called before the first frame update
+    void Start()
+    {
+        //Sets the spawner as the players parent, so when its parents to a gyser or droplet it can snap back at any time.
+        sTimer = 0;
+        spawner = this.transform.parent;
+        facingRight = false;
+        accY = 0;
+        dta = false;
+        dTimer = 0;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if(dta)
+        {
+            dTimer +=Time.deltaTime;
+        }
+        sTimer += Time.deltaTime;
+        if(sTimer>startTime)
+            ProcessInputs();
+    }
+
+    void FixedUpdate()
+    {
+        calcMovement();
+
+    }
+    public bool isGrounded()
+    {
+        return Physics2D.OverlapCircle(GroundCheck.position,0.2f,GroundLayer);
+    }
+    public bool isDropped()
+    {
+        return Physics2D.OverlapCircle(GroundCheck.position, 0.2f, DropLayer);
+    }
+    void ProcessInputs()
+    {
+        //basic 2D platformer movement
+        float moveX = Input.GetAxisRaw("Horizontal");
+        if(Input.GetKeyDown("space")&&(isGrounded()||isDropped()))
+        {
+            rd.velocity = new Vector2(moveDirection.x * moveSpeed, jumpForce);
+            jump.Play();
+        }
+        //float moveY = Input.GetAxisRaw("Vertical");
+        if (Mathf.Abs(moveX) > 0)
+        {
+            ani.SetBool("Walking", true);
+        }
+        else
+        {
+            ani.SetBool("Walking", false);
+        }
+
+        if (!(isGrounded() || isDropped()))
+        {
+            ani.SetBool("Jumping", true);
+        }
+        else
+        {
+            ani.SetBool("Jumping", false);
+        }
+
+        if (!facingRight && moveX > 0)
+        {
+            facingRight = true;
+            transform.localRotation = Quaternion.Euler(0, 180, 0);
+        }
+
+        if (facingRight && moveX < 0)
+        {
+            facingRight = false;
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
+        }
+
+        
+        moveDirection.x = moveX;
+    }
+
+    void calcMovement()
+    {
+        rd.velocity = new Vector2(moveDirection.x * moveSpeed,rd.velocity.y);
+    }
+
+    public void Dead()
+    {
+        ResetParent();
+        if (spawner == this.transform.parent)
+        {
+            die.Play();
+            this.transform.parent.GetComponent<SpawnPoint>().Died();
+            Destroy(this.gameObject);
+        }
+    }
+    public void ResetParent()
+    {
+        this.transform.SetParent(spawner);
+    }
+}
