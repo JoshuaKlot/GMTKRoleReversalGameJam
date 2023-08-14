@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Droplet : MonoBehaviour
+{
+    public AudioSource sfx;
+    public Rigidbody2D rb;
+    public float speed;
+    public LayerMask GroundLayer;
+    public LayerMask RockLayer;
+    public Transform GroundCheck;
+    private float timer;
+    public Collider2D col;
+    // Start is called before the first frame update
+    void Start()
+    {
+        sfx.Play();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //The drop falls at a steady rate
+        Physics2D.IgnoreCollision(col, col);
+        timer += Time.deltaTime;
+        if(timer>.1f)
+        {
+            transform.position = transform.position-new Vector3(0,speed,0);
+            timer = 0;
+        }
+        if(TouchingLava()||TouchingRock())
+        {
+            Destroy(this.gameObject);
+        }
+    }
+    private bool TouchingLava()
+    {
+        return Physics2D.OverlapCircle(GroundCheck.position, 0.01f, GroundLayer);
+    }
+
+    private bool TouchingRock()
+    {
+        return Physics2D.OverlapCircle(GroundCheck.position, 0.01f, RockLayer);
+    }
+    //When the player touches it, it becomes the players parent so the player falls with it
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if(col.transform.GetComponent<PlayerMovement>().isDropped())
+            col.collider.transform.SetParent(transform);
+    }
+    void OnCollisionExit2D(Collision2D col)
+    {
+        this.transform.GetChild(0).GetComponent<PlayerMovement>().ResetParent();
+    }
+}
