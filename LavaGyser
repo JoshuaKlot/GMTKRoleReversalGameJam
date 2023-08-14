@@ -1,0 +1,86 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class LavaGyser : MonoBehaviour
+{
+    public bool Up=false;
+    public float UpTime;
+    //It stays up and down at intervals i set in the inspector
+    public float DownTime;
+    //hieght and speed are also set in the inspector
+    public float height;
+    public float Speed;
+    public AudioSource sfx;
+    private float Timer;
+    private Vector2 maxHeight;
+    private float maxY;
+    private float startY;
+    private Vector2 startingPos;
+    private bool played;
+    // Start is called before the first frame update
+    void Start()
+    {
+        this.transform.GetChild(0).gameObject.SetActive(false);
+        maxY = this.transform.position.y + height;
+        maxHeight = new Vector2(this.transform.position.x +0f,maxY);
+        startY = this.transform.position.y;
+        startingPos = this.transform.position;
+        played = false;
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        Timer += Time.deltaTime;
+        //if its not up it goes up at a certain time
+        if (!Up && Timer > (DownTime - 1f) && Timer < DownTime)
+        {
+            if (!played)
+            { 
+                sfx.Play();
+                played = true;
+            }
+            this.transform.GetChild(0).gameObject.SetActive(true);
+        }
+        
+        if(!Up&&Timer>DownTime)
+        {
+            this.transform.GetChild(0).gameObject.SetActive(false);
+            if(this.transform.position.y<maxY)
+            {
+                this.transform.position = Vector2.MoveTowards(transform.position, maxHeight, Speed);
+            }
+            else
+            {
+                Timer = 0;
+                Up = true;
+            }
+        }
+        //code for going down
+        if (Up && Timer > UpTime)
+        {
+            this.transform.GetChild(0).gameObject.SetActive(false);
+            if (this.transform.position.y > startY)
+            {
+                this.transform.position = Vector2.MoveTowards(transform.position, startingPos, Speed);
+            }
+            else
+            {
+                played = false;
+                Timer = 0;
+                Up = false;
+            }
+        }
+    }
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        col.collider.transform.SetParent(transform);
+    }
+
+    void  OnCollisionExit2D(Collision2D col)
+    {
+        this.transform.GetChild(1).GetComponent<PlayerMovement>().ResetParent();
+    }
+}
