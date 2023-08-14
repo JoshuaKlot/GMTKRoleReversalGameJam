@@ -1,0 +1,37 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class DropSpawnner : MonoBehaviour
+{
+    public GameObject drop;
+    public float TimeToStart;
+    //Variable i set in the inspector to give it the time between drops
+    public float timeBetweenDrops;
+    //the droplet speed is also set in the inspector
+    public float dropSpeed;
+    private float timerToStart;
+    private float timerBetwenDrops;
+    // Start is called before the first frame update
+    void Start()
+    {
+        timerBetwenDrops = 10;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //creates droplets at a steady rate
+        timerToStart += Time.deltaTime;
+        timerBetwenDrops += Time.deltaTime;
+        if(timerToStart>TimeToStart)
+        {
+            if(timerBetwenDrops>timeBetweenDrops)
+            {
+                GameObject droplet = Instantiate(drop, this.transform.position, this.transform.rotation, this.transform);
+                droplet.GetComponent<Droplet>().speed = dropSpeed;
+                timerBetwenDrops = 0;
+            }
+        }
+    }
+}
